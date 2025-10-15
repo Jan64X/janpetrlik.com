@@ -1,0 +1,79 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import BlogCard from '../components/BlogCard.astro';
+import { getCollection } from 'astro:content';
+
+const allPosts = await getCollection('blog');
+const sortedPosts = allPosts.sort((a, b) => 
+  new Date(b.data.date).valueOf() - new Date(a.data.date).valueOf()
+);
+---
+
+<BaseLayout 
+  title="Blog - Jan Petrlík" 
+  description="Technical writeups on infrastructure automation, networking, and reverse engineering."
+>
+  <h1>Blog</h1>
+  <p class="page-intro">
+    Technical writeups and documentation of infrastructure projects, network deployments, 
+    and reverse engineering work. Focus on practical implementations and lessons learned.
+  </p>
+
+  <div class="blog-list">
+    {sortedPosts.length > 0 ? (
+      sortedPosts.map((post) => (
+        <BlogCard
+          title={post.data.title}
+          date={post.data.date}
+          description={post.data.description}
+          slug={post.id.replace('.mdx', '')}
+          tags={post.data.tags}
+        />
+      ))
+    ) : (
+      <div class="no-posts">
+        <p>Blog posts coming soon! Check back for writeups on:</p>
+        <ul>
+          <li>Building a 10,500-line Ansible homelab automation playbook</li>
+          <li>IPv6 deployment with Hurricane Electric</li>
+          <li>Reverse engineering Xiaomi cameras for local control</li>
+          <li>ISP security analysis and network pentesting</li>
+        </ul>
+      </div>
+    )}
+  </div>
+</BaseLayout>
+
+<style>
+  .page-intro {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    max-width: 800px;
+    margin-bottom: var(--spacing-xl);
+  }
+  
+  .blog-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+  }
+  
+  .no-posts {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: var(--spacing-xl);
+    text-align: center;
+  }
+  
+  .no-posts p {
+    font-size: 1.1rem;
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .no-posts ul {
+    text-align: left;
+    max-width: 600px;
+    margin: var(--spacing-md) auto;
+  }
+</style>

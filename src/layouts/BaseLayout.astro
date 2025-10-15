@@ -1,0 +1,246 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "Systems administrator and homelab enthusiast. Building infrastructure, automating deployments, and reverse engineering embedded devices." } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="nav-container">
+        <a href="/" class="nav-logo">~/portfolio</a>
+        <div class="nav-links">
+          <a href="/">Home</a>
+          <a href="/about">About</a>
+          <a href="/projects">Projects</a>
+          <a href="/blog">Blog</a>
+        </div>
+      </div>
+    </nav>
+    
+    <main>
+      <slot />
+    </main>
+    
+    <footer class="footer">
+      <div class="footer-container">
+        <p>&copy; {new Date().getFullYear()} Jan Petrlík. Proudly built with Astro.</p>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --text-primary: #c9d1d9;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --accent: #58a6ff;
+    --accent-hover: #79c0ff;
+    --border: #30363d;
+    --code-bg: #161b22;
+    --success: #3fb950;
+    --warning: #d29922;
+    
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    
+    --max-width: 1200px;
+    --spacing-xs: 0.5rem;
+    --spacing-sm: 1rem;
+    --spacing-md: 1.5rem;
+    --spacing-lg: 2rem;
+    --spacing-xl: 3rem;
+  }
+  
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  main {
+    flex: 1;
+    width: 100%;
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+  
+  /* Typography */
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+    font-weight: 600;
+    line-height: 1.25;
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  h1 {
+    font-size: 2.5rem;
+    margin-top: 0;
+  }
+  
+  h2 {
+    font-size: 2rem;
+    padding-bottom: 0.3em;
+    border-bottom: 1px solid var(--border);
+  }
+  
+  h3 {
+    font-size: 1.5rem;
+  }
+  
+  p {
+    margin-bottom: var(--spacing-md);
+    color: var(--text-secondary);
+  }
+  
+  a {
+    color: var(--accent);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  
+  a:hover {
+    color: var(--accent-hover);
+  }
+  
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background-color: var(--code-bg);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+  }
+  
+  pre {
+    background-color: var(--bg-secondary);
+    padding: var(--spacing-md);
+    border-radius: 6px;
+    overflow-x: auto;
+    margin-bottom: var(--spacing-md);
+    border: 1px solid var(--border);
+  }
+  
+  pre code {
+    background: none;
+    padding: 0;
+  }
+  
+  ul, ol {
+    margin-left: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    color: var(--text-secondary);
+  }
+  
+  li {
+    margin-bottom: var(--spacing-xs);
+  }
+  
+  /* Navigation */
+  .nav {
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border);
+    padding: var(--spacing-md) var(--spacing-md);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    background-color: rgba(22, 27, 34, 0.8);
+  }
+  
+  .nav-container {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .nav-logo {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--accent);
+  }
+  
+  .nav-links {
+    display: flex;
+    gap: var(--spacing-lg);
+  }
+  
+  .nav-links a {
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  
+  .nav-links a:hover {
+    color: var(--text-primary);
+  }
+  
+  /* Footer */
+  .footer {
+    background-color: var(--bg-secondary);
+    border-top: 1px solid var(--border);
+    padding: var(--spacing-lg) var(--spacing-md);
+    margin-top: var(--spacing-xl);
+  }
+  
+  .footer-container {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 2rem;
+    }
+    
+    h2 {
+      font-size: 1.5rem;
+    }
+    
+    .nav-links {
+      gap: var(--spacing-md);
+    }
+    
+    main {
+      padding: var(--spacing-md) var(--spacing-sm);
+    }
+  }
+</style>

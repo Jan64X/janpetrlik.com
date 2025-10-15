@@ -1,0 +1,119 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  tags: string[];
+  githubUrl?: string;
+  externalUrl?: string;
+  blogUrl?: string;
+}
+
+const { title, description, tags, githubUrl, externalUrl, blogUrl } = Astro.props;
+---
+
+<div class="project-card">
+  <h3 class="project-title">{title}</h3>
+  <p class="project-description">{description}</p>
+  
+  <div class="project-tags">
+    {tags.map((tag) => (
+      <span class="tag">{tag}</span>
+    ))}
+  </div>
+  
+  <div class="project-links">
+    {githubUrl && (
+      <a href={githubUrl} target="_blank" rel="noopener noreferrer" class="project-link">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"></path>
+        </svg>
+        View on GitHub
+      </a>
+    )}
+    {externalUrl && (
+      <a href={externalUrl} target="_blank" rel="noopener noreferrer" class="project-link">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M3.75 2h3.5a.75.75 0 0 1 0 1.5h-3.5a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-3.5a.75.75 0 0 1 1.5 0v3.5A1.75 1.75 0 0 1 12.25 14h-8.5A1.75 1.75 0 0 1 2 12.25v-8.5C2 2.784 2.784 2 3.75 2Zm6.854-1h4.146a.25.25 0 0 1 .25.25v4.146a.25.25 0 0 1-.427.177L13.03 4.03 9.28 7.78a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042l3.75-3.75-1.543-1.543A.25.25 0 0 1 10.604 1Z"></path>
+        </svg>
+        Visit website
+      </a>
+    )}
+    {blogUrl && (
+      <a href={blogUrl} class="project-link">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0114.25 13H8.06l-2.573 2.573A1.458 1.458 0 013 14.543V13H1.75A1.75 1.75 0 010 11.25v-9.5zM1.75 1.5a.25.25 0 00-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 01.75.75v2.19l2.72-2.72a.75.75 0 01.53-.22h6.5a.25.25 0 00.25-.25v-9.5a.25.25 0 00-.25-.25H1.75z"></path>
+        </svg>
+        Read writeup
+      </a>
+    )}
+  </div>
+</div>
+
+<style>
+  .project-card {
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: var(--spacing-lg);
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  
+  .project-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+  
+  .project-title {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 1.25rem;
+    color: var(--text-primary);
+  }
+  
+  .project-description {
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .project-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-xs);
+    margin-bottom: var(--spacing-md);
+  }
+  
+  .tag {
+    background-color: var(--bg-tertiary);
+    color: var(--accent);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+  }
+  
+  .project-links {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+  }
+  
+  .project-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.9rem;
+    transition: background-color 0.2s, border-color 0.2s;
+  }
+  
+  .project-link:hover {
+    background-color: var(--bg-primary);
+    border-color: var(--accent);
+  }
+  
+  .project-link svg {
+    flex-shrink: 0;
+  }
+</style>

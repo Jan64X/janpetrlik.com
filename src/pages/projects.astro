@@ -1,0 +1,160 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+---
+
+<BaseLayout 
+  title="Projects - Jan Petrlík" 
+  description="Infrastructure automation, network engineering, and embedded systems projects."
+>
+  <h1>Projects</h1>
+  <p class="page-intro">
+    Things I've built, deployed, or taken apart. Focus on real deployments and practical solutions.
+  </p>
+
+  <section class="section">
+    <h2>Infrastructure</h2>
+    <div class="projects-grid">
+      <ProjectCard
+        title="Homelab Ansible Automation"
+        description="10,500-line Ansible playbook deploying 16 VMs on Proxmox. Everything from TrueNAS to GitLab to monitoring, completely automated from bare metal."
+        tags={['Ansible', 'Proxmox', 'Infrastructure as Code', 'Linux']}
+        githubUrl="https://github.com/jan64x"
+      />
+      
+      <ProjectCard
+        title="Grafana/Prometheus Stack"
+        description="Complete observability for homelab infrastructure. Custom dashboards for resources, network traffic, and service health with alerting."
+        tags={['Prometheus', 'Grafana', 'Monitoring']}
+      />
+      
+      <ProjectCard
+        title="School Media Team Infrastructure"
+        description="Co-administering production website and CMS. Real users, real uptime requirements."
+        tags={['System Administration', 'Production']}
+        externalUrl="https://educanetplus.cz/"
+      />
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Networking</h2>
+    <div class="projects-grid">
+      <ProjectCard
+        title="IPv6 Deployment"
+        description="Full IPv6 via Hurricane Electric tunnel broker. Managing /48 prefix with proper per-VLAN /64 allocation and routing."
+        tags={['IPv6', 'Hurricane Electric', 'Routing']}
+      />
+      
+      <ProjectCard
+        title="MikroTik Network"
+        description="RouterOS configuration with VLAN segmentation, firewall rules, and Nginx reverse proxy gateway."
+        tags={['MikroTik', 'RouterOS', 'VLANs', 'Firewall']}
+      />
+      
+      <ProjectCard
+        title="GNS3 Network Simulation"
+        description="Testing network topologies and configurations before production deployment."
+        tags={['GNS3', 'Network Simulation', 'Testing']}
+      />
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Hardware & Security</h2>
+    <div class="projects-grid">
+      <ProjectCard
+        title="Xiaomi Camera Hacking"
+        description="Reverse engineered via UART and modified firmware to add SSH and RTSP. Local control without cloud dependency."
+        tags={['Reverse Engineering', 'UART', 'IoT Security', 'Firmware']}
+      />
+      
+      <ProjectCard
+        title="Solax WiFi Protocol Parser"
+        description="Reverse engineered solar monitor WiFi dongle protocol. Built Rust parser for local data extraction."
+        tags={['Rust', 'Reverse Engineering', 'Protocol Analysis']}
+        githubUrl="https://github.com/jan64x/solax-mon"
+      />
+      
+      <ProjectCard
+        title="Embedded Device Research"
+        description="General firmware modification and hardware hacking. UART enumeration, firmware extraction and modification."
+        tags={['Hardware Security', 'UART', 'Firmware', 'Embedded']}
+      />
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Development</h2>
+    <div class="projects-grid">
+      <ProjectCard
+        title="Pine64 PineNote"
+        description="Contributing to open-source development of e-ink tablet. Linux support and device functionality."
+        tags={['Open Source', 'Linux', 'Pine64']}
+        githubUrl="https://github.com/jan64x/pn-ctrl"
+      />
+
+      <ProjectCard
+        title="Pine64 PineTime"
+        description="Developing applets in C++ for open-source smartwatch."
+        tags={['C++', 'Embedded', 'Open Source', 'Pine64']}
+      />
+      
+      <ProjectCard
+        title="Self-Hosted Services"
+        description="GitLab (CI/CD), Immich (photos), Navidrome (music), Searxng (search), TrueNAS (storage). All self-hosted, no cloud dependencies."
+        tags={['Self-Hosting', 'Docker', 'Linux']}
+      />
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Hardware</h2>
+    <div class="projects-grid">
+      <ProjectCard
+        title="Dell R620 Homelab"
+        description="Dual Xeon E5-2670 v2 (20 cores/40 threads), 256GB RAM. Running Proxmox with 16 production VMs."
+        tags={['Proxmox', 'Virtualization', 'Dell R620']}
+      />
+      
+      <ProjectCard
+        title="3D Printing"
+        description="Prusa MK3S+ for functional parts, custom enclosures, and hardware modifications."
+        tags={['3D Printing', 'Prusa MK3S+', 'Hardware']}
+      />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-intro {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    max-width: 800px;
+    margin-bottom: var(--spacing-xl);
+  }
+  
+  .section {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-xl);
+    border-top: 1px solid var(--border);
+  }
+  
+  .section:first-of-type {
+    border-top: none;
+    padding-top: 0;
+  }
+  
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+  }
+  
+  @media (max-width: 768px) {
+    .projects-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

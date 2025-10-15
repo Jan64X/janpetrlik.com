@@ -1,0 +1,150 @@
+---
+import BaseLayout from './BaseLayout.astro';
+
+const { frontmatter } = Astro.props;
+
+const formattedDate = new Date(frontmatter.date).toLocaleDateString('en-US', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric'
+});
+---
+
+<BaseLayout title={frontmatter.title} description={frontmatter.description}>
+  <article class="blog-post">
+    <header class="post-header">
+      <h1>{frontmatter.title}</h1>
+      <div class="post-meta">
+        <time datetime={frontmatter.date}>{formattedDate}</time>
+        {frontmatter.tags && (
+          <div class="post-tags">
+            {frontmatter.tags.map((tag: string) => (
+              <span class="tag">{tag}</span>
+            ))}
+          </div>
+        )}
+      </div>
+    </header>
+    
+    <div class="post-content">
+      <slot />
+    </div>
+    
+    <footer class="post-footer">
+      <a href="/blog" class="back-link">← Back to blog</a>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .blog-post {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  
+  .post-header {
+    margin-bottom: var(--spacing-xl);
+    padding-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--border);
+  }
+  
+  .post-header h1 {
+    margin-top: 0;
+    margin-bottom: var(--spacing-md);
+    font-size: 2.5rem;
+  }
+  
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+  }
+  
+  .post-meta time {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+  }
+  
+  .post-tags {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-wrap: wrap;
+  }
+  
+  .tag {
+    background-color: var(--bg-tertiary);
+    color: var(--accent);
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-family: var(--font-mono);
+  }
+  
+  .post-content {
+    line-height: 1.8;
+  }
+  
+  /* Enhanced code block styling for blog posts */
+  .post-content :global(pre) {
+    margin: var(--spacing-lg) 0;
+    line-height: 1.5;
+  }
+  
+  .post-content :global(img) {
+    max-width: 100%;
+    border-radius: 6px;
+    margin: var(--spacing-lg) 0;
+    border: 1px solid var(--border);
+  }
+  
+  .post-content :global(blockquote) {
+    border-left: 4px solid var(--accent);
+    padding-left: var(--spacing-md);
+    margin: var(--spacing-lg) 0;
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+  
+  .post-content :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: var(--spacing-lg) 0;
+  }
+  
+  .post-content :global(th),
+  .post-content :global(td) {
+    border: 1px solid var(--border);
+    padding: var(--spacing-sm);
+    text-align: left;
+  }
+  
+  .post-content :global(th) {
+    background-color: var(--bg-secondary);
+    font-weight: 600;
+  }
+  
+  .post-footer {
+    margin-top: var(--spacing-xl);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border);
+  }
+  
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    color: var(--accent);
+    font-weight: 500;
+  }
+  
+  .back-link:hover {
+    color: var(--accent-hover);
+  }
+  
+  @media (max-width: 768px) {
+    .post-header h1 {
+      font-size: 2rem;
+    }
+  }
+</style>
