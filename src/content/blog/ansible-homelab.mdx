@@ -1,21 +1,24 @@
 ---
-title: "Building a 10,500-Line Ansible Homelab"
-description: "How I automated my entire 16-VM Proxmox homelab using Ansible, from bare metal to production services."
+title: "Building a 11k-Line Ansible Homelab"
+description: "How I automated my 16-VM Proxmox homelab using Ansible, from base image to production services."
 date: "2025-10-15"
 tags: ["Ansible", "Proxmox", "Infrastructure", "Automation"]
 ---
 
+import IaCSupremacy from './ansible-homelab/iac_supremacy.png';
+
 ## Overview
 
-Managing 16 virtual machines across different services manually is tedious and error-prone. This post walks through how I automated my entire homelab deployment using Ansible, resulting in a 10,500-line playbook that can rebuild the entire infrastructure from scratch.
+Managing 16 virtual machines across different services manually is tedious and error-prone. This post walks through how I automated my entire homelab deployment using Ansible, resulting in a 11k-line playbook that can rebuild the entire infrastructure from scratch.
 
 ## The Infrastructure
 
 My homelab runs on a Dell PowerEdge R620 with:
 - Dual Intel Xeon E5-2670 v2 (10 cores each, 20 cores/40 threads total)
-- 256GB RAM
+- 256GB DDR3 ECC RAM
 - Proxmox VE as the hypervisor
 - 16 VMs running various services
+- Mirrored ZFS pool for VM disks made of two 512GB Samsung 860 EVO SSDs
 
 ## Why Ansible?
 
@@ -26,141 +29,365 @@ After manually configuring services multiple times and dealing with configuratio
 - **Idempotent**: Can run playbooks multiple times safely
 - **Large ecosystem**: Many community roles and modules available
 
+<Image 
+  src={IaCSupremacy} 
+  alt="Homelab Infrastructure Diagram"
+  width={240}
+  quality={85}
+/>
+
 ## Project Structure
 
 ```
-homelab-ansible/
-├── inventory/
-│   ├── hosts.yml
-│   └── group_vars/
-├── roles/
-│   ├── proxmox/
-│   ├── docker/
-│   ├── nginx/
-│   ├── monitoring/
+homelab-ansible
+├── ansible.cfg
+├── CONTRIBUTING.md
+├── credentials
+│   ├── hosts
+│   │    └── ... # per-host secrets
+│   ├── nas_creds.txt
+│   └── ssh_keys
+│       ├── ansible_admin.key
+│       ├── ansible_admin.pub
+│       ├── README.md
+│       ├── sysadmin_homelab.pub
+│       └── sysadmin_vpses.pub
+├── group_vars
+│   ├── all.yml
+│   ├── all.yml.example
+│   ├── homelab.yml
+│   ├── homelab.yml.example
+│   ├── vpses.yml
+│   └── vpses.yml.example
+├── inventory
+│   ├── hosts.yml
+│   └── hosts.yml.example
+├── LICENSE
+├── README.md
+├── roles
+│   ├── base
+│   ├── filescdn
 │   └── ...
-├── playbooks/
-│   ├── site.yml
-│   ├── bootstrap.yml
-│   └── ...
-└── templates/
+├── SETUP.md
+├── site.yml
+├── TODO.md
+└── update.yml
 ```
 
 ## Key Components
 
-### VM Provisioning
+### Base Configuration
+Every server starts with the `base` role, which handles the foundation:
+- Creating system users with proper permissions
+- Setting up SSH key-based authentication
+- Configuring UFW firewall rules
+- Installing security tools like fail2ban
+- Setting up automatic security updates
 
-Automated Proxmox VM creation using the `community.general.proxmox_kvm` module:
+### The Services
+
+My homelab runs a variety of self-hosted services, each automated through Ansible:
+
+**Development & Collaboration:**
+- **Forgejo**: Self-hosted Git repository manager
+- **SearXNG**: Privacy-respecting metasearch engine aggregating results from multiple sources
+
+**Media & Content:**
+- **Immich**: Modern photo and video management (like Google Photos, but self-hosted)
+- **Navidrome**: Music server compatible with Subsonic clients
+- **Files CDN**: Content delivery and file hosting service
+- **Torrent Downloader**: qBittorrent with Flood web UI for downloads
+
+**Social & Communication:**
+- **Sharkey**: Federated microblogging server (a Misskey fork)
+
+**Infrastructure:**
+- **Nginx Gateway**: Reverse proxy handling SSL termination and routing
+- **UniFi Controller**: Network management for my UniFi devices
+- **Prometheus + Grafana**: Monitoring and metrics visualization
+- **Node Exporter**: System metrics collection on all hosts
+
+### The Smart Part: Dynamic Deployment
+
+Instead of writing separate playbooks for each host, I use a role-based approach. Each host in the inventory has a `host_roles` variable that lists which services should run on it:
 
 ```yaml
-- name: Create VM
-  community.general.proxmox_kvm:
-    api_user: "{{ proxmox_user }}"
-    api_password: "{{ proxmox_password }}"
-    api_host: "{{ proxmox_host }}"
-    name: "{{ vm_name }}"
-    node: "{{ proxmox_node }}"
-    cores: "{{ vm_cores }}"
-    memory: "{{ vm_memory }}"
-    net:
-      net0: "virtio,bridge=vmbr0,tag={{ vlan_id }}"
-    state: present
+nginx-gateway:
+  ansible_host: 192.168.1.10
+  host_roles:
+    - base
+    - nginx_gateway
+    - monitoring-hl
 ```
 
-### Service Deployment
+The playbook reads this and automatically applies the appropriate roles. Want to move GitLab to a different server? Just change the `host_roles` assignment and re-run the playbook.
 
-Each service has its own role with proper templating:
+## Building the Automation
+
+### Starting Simple
+
+I didn't build this all at once. The first role I wrote was `base`, which handles common tasks across all servers:
+
+1. Create system users (ansible for automation, sysadmin for manual access)
+2. Deploy SSH keys
+3. Configure passwordless sudo
+4. Set up firewall rules
+5. Install security tools
+
+Once that worked reliably, I could deploy new VMs knowing they'd be properly secured and accessible.
+
+### The Template Pattern
+
+Most services follow a similar pattern:
+
+1. **Install dependencies** (Docker, database, etc.)
+2. **Generate credentials** if they don't exist
+3. **Deploy configuration files** from Jinja2 templates
+4. **Pull from NAS backup** if restoring, or start fresh
+5. **Start the service** (usually via Docker Compose or systemd)
+6. **Configure firewall rules** for the service ports
+
+The beauty of Ansible is **idempotency**—running the playbook multiple times produces the same result. It won't regenerate passwords or recreate containers if they already exist.
+
+### Handling Secrets
+
+Security was a major consideration. The playbook generates unique passwords for each service and stores them in `credentials/hosts/<hostname>/`. These files are gitignored, so they never end up in version control.
+
+For NAS access (used for backups), credentials are stored in `credentials/nas_creds.txt` and loaded at runtime:
 
 ```yaml
-- name: Deploy GitLab
-  hosts: gitlab
-  roles:
-    - docker
-    - gitlab
-  vars:
-    gitlab_external_url: "https://git.example.com"
-    gitlab_smtp_enabled: true
+nas_credentials: "{{ lookup('file', playbook_dir + '/credentials/nas_creds.txt') | from_yaml }}"
 ```
 
-### Configuration Templates
+SSH keys are separated by environment:
+- `ansible_admin.key` - Used by Ansible to connect to all hosts
+- `sysadmin_homelab.pub` - Personal access to homelab servers
+- `sysadmin_vpses.pub` - Personal access to VPS servers
 
-Using Jinja2 templates for configuration files:
+### The Nginx Gateway
 
-```jinja
-# nginx.conf.j2
-upstream {{ service_name }} {
-    server {{ backend_host }}:{{ backend_port }};
-}
+One of the most important roles is the Nginx gateway, which handles:
 
+1. **Reverse proxy routing** - Routes requests to backend services based on domain
+2. **SSL/TLS termination** - Handles HTTPS using Cloudflare Origin CA certificates
+3. **Static website hosting** - Automatically pulls my personal website from GitHub
+
+The configuration uses Jinja2 templates to generate virtual host configs:
+
+```nginx
 server {
     listen 443 ssl http2;
-    server_name {{ domain }};
+    server_name {{ services.gitlab.domain }};
     
-    ssl_certificate /etc/ssl/{{ domain }}.crt;
-    ssl_certificate_key /etc/ssl/{{ domain }}.key;
+    ssl_certificate {{ nginx_ssl_cert_path }};
+    ssl_certificate_key {{ nginx_ssl_key_path }};
     
     location / {
-        proxy_pass http://{{ service_name }};
+        proxy_pass {{ services.gitlab.backend_server }};
+        proxy_set_header Host $host;
+        # ... more proxy settings
     }
 }
 ```
 
-## Monitoring Integration
+All service endpoints are configured in `group_vars/all.yml`, making it easy to change backends without touching templates.
 
-Every service is automatically registered with Prometheus:
+### Monitoring Everything
+
+The observability stack consists of:
+
+- **Node Exporter** on every host (collecting CPU, memory, disk metrics)
+- **Prometheus** scraping metrics from all exporters
+- **Grafana** for visualization and dashboards
+
+The monitoring role automatically discovers all hosts and configures Prometheus scrape targets:
 
 ```yaml
-- name: Configure Prometheus targets
-  template:
-    src: prometheus-targets.yml.j2
-    dest: /etc/prometheus/targets/{{ inventory_hostname }}.yml
-  delegate_to: monitoring
-  notify: reload prometheus
+scrape_configs:
+  {% for host in groups['homelab'] %}
+  - job_name: '{{ host }}'
+    static_configs:
+      - targets: ['{{ hostvars[host].ansible_host }}:9100']
+  {% endfor %}
 ```
+
+This means adding a new host to the inventory automatically adds it to monitoring — no manual configuration needed!
+
+### Backup and Restore
+
+Several services integrate with my NAS for backups:
+
+**Forgejo**: Backs up repositories, database, and configuration to NAS weekly. On first deployment, the role checks for existing backups and restores if found (simplified example):
+
+```yaml
+- name: Find latest backup on NAS
+  ansible.builtin.find:
+    paths: /mnt/forgejo_temp
+    patterns: 'forgejo-backup-*.zip'
+    age: -90d  # Only look at backups from last 90 days
+  register: backup_files
+  when: is_fresh_install
+
+- name: Set latest backup path
+  ansible.builtin.set_fact:
+    latest_backup: "{{ (backup_files.files | sort(attribute='mtime', reverse=true) | first).path if backup_files.files | length > 0 else '' }}"
+  when: is_fresh_install
+
+- name: Deploy docker-compose.yml
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: /opt/forgejo/docker-compose.yml
+    mode: '0644'
+  become: true
+  notify: Restart Forgejo
+
+- name: Copy backup to temporary location
+  ansible.builtin.copy:
+    src: "{{ latest_backup }}"
+    dest: "/tmp/forgejo-restore.zip"
+    remote_src: true
+    mode: '0644'
+  become: true
+  when:
+    - is_fresh_install
+    - latest_backup != ''
+    - not (forgejo_force_fresh | default(false))
+
+- name: Extract backup to temporary directory
+  ansible.builtin.unarchive:
+    src: "/tmp/forgejo-restore.zip"
+    dest: "/tmp"
+    remote_src: true
+  become: true
+  when:
+    - is_fresh_install
+    - latest_backup != ''
+    - not (forgejo_force_fresh | default(false))
+
+- name: Restore Forgejo data directory
+  ansible.posix.synchronize:
+    src: "/tmp/data/"
+    dest: "/var/lib/forgejo/data/"
+  delegate_to: "{{ inventory_hostname }}"
+  become: true
+  when:
+    - is_fresh_install
+    - latest_backup != ''
+    - not (forgejo_force_fresh | default(false))
+
+- name: Start Forgejo with Docker Compose
+  community.docker.docker_compose_v2:
+    project_src: /opt/forgejo
+    state: present
+    pull: "always"
+  become: true
+```
+
+**Immich and Sharkey** follow similar patterns, with flags like `immich_force_restore: true` to control whether to restore from backup or start fresh.
+
+## Real-World Benefits
+
+### Disaster Recovery
+
+The biggest win came when a VM's virtual disk corrupted. In the past, this would've meant hours of manual reconfiguration. Instead:
+
+1. Deployed fresh Debian 12 VM
+2. Created ansible user with passwordless sudo
+3. Added host to inventory
+4. Ran: `ansible-playbook site.yml --limit failed-host`
+
+15 minutes later, the service was back online with all data restored from NAS.
+
+### Consistency
+
+Before Ansible, each server was slightly different. Different SSH configurations, different firewall rules, different package versions. Now, every server gets the exact same base configuration, making troubleshooting much easier.
+
+### Documentation as Code
+
+The playbook **is** the documentation. Want to know how GitLab is configured? Read `roles/gitlab/tasks/main.yml`. Want to know which ports are open? Check the firewall tasks. No more outdated wiki pages.
+
+### Easy Updates
+
+The `update.yml` playbook updates all Debian packages across every host:
+
+```bash
+ansible-playbook update.yml
+```
+
+I run this monthly, and it updates 16 VMs in parallel. What used to take an hour now takes 5 minutes.
 
 ## Lessons Learned
 
-### 1. Start Small, Iterate
+### Start Small
 
-Don't try to automate everything at once. Start with one service, perfect it, then expand.
+Don't try to automate everything at once. I started with just the base role and one service (Nginx). Once that was solid, I added more services incrementally.
 
-### 2. Use Roles Liberally
+### Idempotency Matters
 
-Breaking playbooks into reusable roles makes maintenance easier and enables composition.
+Always make your playbooks idempotent. Use modules like `stat` to check if something exists before creating it. Use `creates` parameter on shell tasks. This makes re-running playbooks safe.
 
-### 3. Secrets Management
+### Variables Are Your Friend
 
-Used Ansible Vault for sensitive data:
+I spent time organizing variables into a hierarchy:
+- `group_vars/all.yml` - Global settings
+- `group_vars/homelab.yml` - Homelab-specific settings
+- `group_vars/vpses.yml` - VPS-specific settings
+- Inventory host variables - Host-specific overrides
 
-```bash
-ansible-vault encrypt group_vars/all/vault.yml
-```
+This made it easy to manage differences between environments without duplicating code.
 
-### 4. Idempotency is Key
+### Test, Test, Test
 
-Always test playbooks multiple times to ensure they're truly idempotent.
+I maintain a "test" stack of VMs that I break regularly to verify the playbook can rebuild them. This catches issues before they affect production services.
 
-### 5. Documentation
+### Don't Fight the Tools
 
-Document variables and complex logic. Future you will thank present you.
+Early on, I tried to make Ansible do things it wasn't designed for (complex conditional logic, loops within loops). When I found myself writing 50+ lines of Jinja2, I stepped back and simplified. Sometimes a simple shell script called by Ansible is the right answer.
 
-## Results
+## The Results
 
-- **Deployment time**: Full infrastructure rebuild in ~2 hours (was 2-3 days manual)
-- **Consistency**: All VMs configured identically
-- **Version control**: Every change tracked in Git
-- **Disaster recovery**: Can rebuild from backups + playbook quickly
+**Before Ansible:**
+- Manual configuration: ~2 hours per server
+- Configuration drift across hosts
+- No disaster recovery plan
+- Updates required SSHing into each server
+- Incomplete documentation
 
-## Next Steps
+**After Ansible:**
+- New server deployment: 15 minutes (mostly waiting for packages)
+- Consistent configuration across all hosts
+- One-command disaster recovery
+- Parallel updates in 5 minutes
+- Self-documenting infrastructure
 
-Currently working on:
-- CI/CD integration for automated testing
-- Better secrets management with external vault
-- More granular service monitoring
-- Network automation (MikroTik configuration)
+## Future Improvements
+
+There's still room for enhancement:
+
+1. **Automated testing** - Set up CI/CD to test playbook changes against test VMs (Not sure If I really want do this one, it's a pain in the butt)
+2. **Ansible Vault** - Encrypt sensitive variables instead of relying on gitignore
+3. **Service health checks** - Add post-deployment verification
+4. **Better backup rotation** - Improve automated backup cleanup and retention policies
+5. **Secrets management** - Consider HashiCorp Vault or similar for credential management
 
 ## Conclusion
 
-Infrastructure as code transformed how I manage my homelab. The initial investment in writing Ansible playbooks paid off immediately in reliability and maintainability.
+Building this 11k-line Ansible playbook was a journey that took months of incremental improvements. The initial time investment was significant, but the ongoing benefits are enormous.
 
-The complete playbook is available on [GitHub](https://github.com/jan64x).
+If you're managing more than a few servers manually, infrastructure as code isn't just nice to have — it's essential. Ansible's agentless architecture and readable YAML syntax make it an excellent choice for homelab automation.
+
+The best part? Everything is version controlled. I can see exactly how my infrastructure evolved over time, roll back changes if needed, and confidently make updates knowing I can rebuild from scratch if something goes wrong.
+
+**Key Takeaways:**
+- Start with base configuration and add services incrementally
+- Make everything idempotent so playbooks are safe to re-run
+- Use variables to avoid hardcoding values
+- Test disaster recovery procedures regularly
+- Document through code, not separate wikis
+
+The code is available on my GitHub for those interested in diving deeper. Happy automating! 🚀
+
+---
+
+*Have questions about Ansible or homelab automation? Feel free to reach out!*
+

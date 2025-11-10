@@ -94,9 +94,12 @@ const formattedDate = new Date(frontmatter.date).toLocaleDateString('en-US', {
   
   .post-content :global(img) {
     max-width: 100%;
+    height: auto;
+    width: auto;
     border-radius: 6px;
     margin: var(--spacing-lg) 0;
     border: 1px solid var(--border);
+    display: block;
   }
   
   .post-content :global(blockquote) {

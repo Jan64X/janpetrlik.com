@@ -4,7 +4,10 @@ import mdx from '@astrojs/mdx';
 
 // https://astro.build/config
 export default defineConfig({
-  integrations: [mdx()],
+  integrations: [mdx({
+    // Make components available globally in all MDX files
+    extendMarkdownConfig: true,
+  })],
   markdown: {
     shikiConfig: {
       theme: 'github-dark',

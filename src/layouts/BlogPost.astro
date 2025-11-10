@@ -1,0 +1,13 @@
+---
+import { Image } from 'astro:assets';
+
+const { frontmatter } = Astro.props;
+
+// Make Image component available to MDX content
+const components = { Image };
+---
+
+<article>
+  <h1>{frontmatter.title}</h1>
+  <slot components={components} />
+</article>
