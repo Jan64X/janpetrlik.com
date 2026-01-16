@@ -1,0 +1,77 @@
+---
+title: "Repurposing an E-Waste camera for something else"
+description: "How I repurposed an E-Waste camera to run a crappy webserver"
+date: "2026-01-16"
+tags: ["Reverse Engineering", "Embedded", "UART", "IoT", "Firmware"]
+---
+
+import beforePictureOfBlogcam from './ewaste-camera/blogcam.png';
+
+## Overview
+
+I had this Xiaomi camera (model `MJXSJ05CM`) for home security, however I kinda was getting annoyed that it did not have local RTSP, so when the sensor died, I didn't think much of it and thought i'd just put it in the trash bin.
+
+However I kept it in a storage bin in my workshop for a while (I don't like throwing out technology too much), and when I came across a GitHub repo with sources to build an experimental version of OpenIPC for this camera, I thought to myself *"hmmm, linux with root access, what do, caveman brain thinkie"*, then when it was like 2am and I couldn't sleep it hit me like a semi truck *"AHA! I'll host a webserver on this piece of crap!"*
+
+The Github repo I found was: [NTUT-112-2-self-learning/MJXSJ05CM](https://github.com/NTUT-112-2-self-learning/MJXSJ05CM/tree/SSC323). So thank you to this random person, because you made my day and by extension are inspiration for this "project".
+
+So I cloned the repo, built OpenIPC, double checked that the sensor truly was completely cooked, and then I got to work.
+
+## Implementation
+
+I'm pretty familiar with embedded devices such as this one, as it's also Buildroot based, it wasn't the hardest thing to modify, only adding a minimal defconfig that removes the actual IP Camera stuffs from OpenIPC and adding a cgi-bin script to Busybox's `httpd` was required to get it to show me a custom website.
+
+## Where do I take a look at this?
+
+[https://ewaste-cam.janpetrlik.com](https://ewaste-cam.janpetrlik.com)
+
+*(I'll put it offline after some time, you can take a look at the below image)*
+
+## Image of how the webpage looked, when it was still online
+
+<Image 
+  src={beforePictureOfBlogcam} 
+  alt="Picture of Blogcam webinterface"
+  width={1204}
+  quality={85}
+/>
+
+## Building and the project
+
+My repository if for some gosh darn reason you want to replicate something a cursed as this: https://github.com/Jan64X/micam-ssc323-websrv. 
+The instructions to build are really easy:
+
+Just clone the repo, run the docker-build.sh bash script, and the script will automatically build a Docker container (with an older version of GCC which is needed for the SigmaStar 4.9 kernel to compile), and use the Docker container to build OpenIPC with my custom webserver stuffs. 
+
+However if you don't already have OpenIPC installed on this camera, you'll have to install this before you proceed: https://github.com/user-attachments/files/15988739/MJXSJ05CM.zip
+After you've done that and have my custom build ready, just SSH into the camera and flash my two images:
+
+```bash
+flashcp -v uImage.ssc323 /dev/mtd2
+flashcp -v rootfs.squashfs.ssc323 /dev/mtd3
+```
+
+When the camera boots up, it should not have any OpenIPC stuff running and only SSH and the webserver.
+
+## Hardware
+- SoC: SigmaStar SSC323 (ARM Cortex-A7 @ 800MHz)
+- RAM: 32MB
+- Storage: 16MB NOR flash
+- Connectivity: WiFi 4 (802.11n), no Ethernet
+(not good hardware)
+
+## Why do this??
+
+Have you ever woken up in the middle of the night with a desire to change the world? Well *I DIDN'T*, I have zero idea on why I thought this would be worth the time, effort and loss of sleep. 
+I've worked day-and-night, lost sleep because of this, I forgot to eat, drink or even breathe, but it was all worth it for this abomination that has angered every single embedded engineer in a 100km radius.
+The *REAL* reason why I did this is because my friend (who will remain unnamed) is *ALWAYS* complaining about breaking something and it not being his fault (it is 100% his fault [actually it is ChatGPT's fault]). So I wanted to prove to him, that I am the omega male of cursed electronics, and I'm fairly certain that this is as cursed as it gets (for now... but just you wait, I'll figure out something more cursed *soon*).
+
+
+## DISCLAIMER
+I am not responsible for bricked cameras, fried flash chips, angry embedded engineers showing up at your door, or your significant other questioning your life choices at 2am. If you decide to follow this guide and something goes wrong, that's on you—I'm just some sleep-deprived person who thought hosting a webserver on e-waste was a good idea. Do your own research before flashing anything, and maybe don't blame me (or your favourite LLM) when things inevitably go sideways. You've been warned.
+
+---
+
+TL;DR
+
+Webserver on an IP Camera = not the best idea.
