@@ -1,0 +1,100 @@
+---
+title: "From \"Host Everything\" to \"Host Smart\": De-risking My Infrastructure"
+description: "How I stopped treating my homelab like public infrastructure and finally started sleeping at night."
+date: "2026-02-08"
+tags: ["Homelab", "Infrastructure", "Self-Hosting", "Security", "Ansible"]
+---
+
+## The "Host Everything" Phase
+
+For about two years, I ran my homelab like a miniature ISP. Forgejo, Sharkey (fediverse), SearXNG, a file sharing CDN, my personal website, monitoring, media servers, *all of it*, some exposed to the public internet, behind Cloudflare because my ISP's network security is genuinely terrible (plus Cloudflare's caching is pretty useful).
+
+How terrible? When I spun up a T-Pot honeypot for fun, I logged over **20 thousand** probes in 24 hours (around 3 thousand of which were actual login attempts). Bots are relentlessly mapping my ISP's address space for anything that responds. That kind of environment makes you paranoid, and for a while I leaned *into* the paranoia, hardening everything like it was a production datacenter.
+
+And I mean *everything*. Strict firewall rules, fail2ban on every host, Cloudflare proxying, monitoring alerts, the works. I was securing personal services that only I used as if they were critical infrastructure. At some point I stepped back and asked myself a question that should've been obvious from the start:
+
+**Why am I doing this?**
+
+## The Realization
+
+The answer, embarrassingly, was mostly *"because I can."* I had gotten caught up in the selfhosting community's implicit assumption that hosting more services publicly somehow equals more learning or more credibility.
+
+Then reality intervened. Twice, I got burned by vulnerabilities in public-facing services that nobody was using except me and the bots probing them. Nothing catastrophic, but enough to make me realize I was maintaining an attack surface for no practical reason. Every public service is a potential entry point. Every exposed port is something that needs monitoring, updating, and defending. I was spending more time *securing* services than *using* them.
+
+Around the same time, I started paying closer attention to the creators who originally got me into selfhosting: Jeff Geerling, Apalrd, Wendell from Level1Techs. From what I can tell, their public footprint is basically just their website or blog. Everything else appears to sit behind a VPN. They don't seem to run public Fediverse instances or public search engines from their home networks. Their homelabs are *homelabs*, not public infrastructure.
+
+It took me a while to really internalize that. I kept thinking *"but what if someone wants to use my SearXNG instance?"* and the honest answer was: nobody does. My Sharkey instance? Just me. My public Forgejo? A couple of repos that could just as easily live on a hosted platform. I was maintaining a public attack surface for services with an audience of one.
+
+## The Architecture Split
+
+So I split everything into two completely separate environments:
+
+**Oracle Cloud VPS (public infrastructure):**
+- Nginx serving my personal website (Astro static site)
+- SearXNG (so I can search without a VPN)
+- FilesCDN (sharing files with friends, serving a local directory to which I push over SFTP)
+- Grafana + Prometheus (monitoring only the VPS itself)
+
+**Homelab (private, VPN-only access):**
+- TrueNAS (storage and backups)
+- Grafana + Prometheus (monitoring only the homelab)
+- Immich (photo management)
+- Unbound (local DNS)
+- Navidrome (music)
+- Seedbox (Network traffic routed strictly through a commercial VPN via Gluetun. I use local firewall rules/Docker networks to allow LAN access only for the WebUI, ensuring the VPN provider can't reach back into my network.)
+- GNS3 (network simulation/labbing)
+
+A few things got retired entirely in the process. Sharkey was the easy call; I never really ended up using it, so it was just sitting there accumulating updates and attack surface. Public Forgejo was similar. I migrated the few repos that couldn't live on GitHub to my private Forgejo instance and shut down the public one. Maintaining a public forge for two repos was simply not worth the security overhead.
+
+The key design decision: **zero persistent connections between the two environments.** The VPS doesn't know my homelab exists. My homelab doesn't know the VPS exists. They share nothing. Not a WireGuard tunnel, not a backup path, not even a mention of each other in their respective Ansible repos.
+
+## The Home Network
+
+My home network now exposes exactly **one UDP port** for WireGuard, running directly on my MikroTik router. That's it. That's the entire public attack surface of my home network. And even that one UDP port is effectively invisible. Unlike TCP services that handshake, WireGuard silently drops unauthenticated packets. To a port scanner, my home IP looks like a black hole.
+
+For DNS, I run Unbound locally, which handles my infrastructure domain. No public DNS records for internal services. I get proper SSL certificates on local services using DNS-01 challenges through Cloudflare without exposing anything publicly (DNS-01 validates ownership via API, not by pinging my server). From the outside, my homelab is invisible.
+
+## Ansible: Two Repos, Clean Separation
+
+I split my monolithic Ansible playbook into two completely independent repos:
+
+- **`public-infra`**: Sets up and maintains the VPS
+- **`homelab-ansible`**: Sets up and maintains the homelab
+
+Both repos are public on my GitHub (good CV material), but neither references the other. This means my portfolio and public services stay online even when my home internet is being unreliable, which happens more often than I'd like to admit. No more showing someone my website during a presentation and getting a timeout because my ISP decided to take a nap.
+
+Ironically, my setup is now better for my CV. Instead of showing an employer a flashy but fragile home server that might be down, I show them two clean, professional Ansible repositories and a high-availability architecture that proves I understand risk management.
+
+## What I Learned
+
+**"I can host this" is not the same as "I should host this."** The selfhosting community is fantastic for learning, but there's a subtle pressure to keep adding public services as a form of credibility. The reality is that you learn just as much, arguably more, by running services privately, because you can focus on the *technology* instead of the *defense*.
+
+**Separation of concerns isn't just for code.** Keeping public and private infrastructure completely independent means a problem in one can never cascade to the other. My ISP going down doesn't affect my website. A VPS compromise doesn't touch my photos or personal data.
+
+**Your homelab should serve *you*.** I was maintaining services for hypothetical users who never showed up. Now my homelab runs exactly what I use daily, and I can break things, experiment, and rebuild without worrying about uptime for nobody.
+
+**The people who inspired me to selfhost mostly keep things private too.**
+
+## The Feeling
+
+This is going to sound dramatic for what in reality amounts to "I moved some Docker containers and deleted some DNS records," but it genuinely feels like untangling a knot that's been tied for ages. I no longer have that background anxiety of *"what if someone finds a vulnerability in one of my public services at 3am."* My homelab is *my* homelab now. If I break something, I fix it on my own schedule. If my ISP goes down, my public stuff is unaffected and my private stuff can wait.
+
+The silence is the best part. I used to get notifications about failed SSH logins or geo-blocking events on my phone. Now, my notification tray is empty.
+
+The best way to describe it: my homelab went from being a responsibility to being a hobby again.
+
+## Should You Do This?
+
+If you're running public services from your homelab and you're the only person using them, ask yourself honestly why they're public. If the answer is *"because selfhosting means hosting publicly"*, I'd challenge that assumption. Selfhosting means running your own software on your own terms. A VPN counts. A VPS for the stuff that genuinely needs to be public counts. You don't get bonus points for exposing your home network to the internet.
+
+If you're running services that other people actually depend on, that's a completely different situation and all the more power to you. But if you're like me, maintaining public infrastructure for an audience of one, maybe it's time to evict the internet from your homelab.
+
+---
+
+*A practical note on the VPS: I'm using Oracle Cloud's Always Free tier, but as a Pay-As-You-Go customer who only uses Always Free resources. PAYG customers get priority for resource allocation, which is how I actually got an Ampere instance when free-tier-only users were stuck in a queue for months. Oracle also can't reclaim instances from paying customers the way they sometimes do with purely free accounts.*
+
+---
+
+TL;DR
+
+Ran public services from home for two years. Nobody used the services except me and bots. Split into VPS (public) and homelab (private, VPN-only). Home network now has one open port. Sleep quality: significantly improved.
