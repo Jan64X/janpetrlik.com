@@ -1,0 +1,139 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+---
+<BaseLayout title="Legal | Jan Petrlík" description="Terms of Service and Legal Notices">
+  <div class="legal-container">
+    <h1>Terms of Service & Legal Notice</h1>
+    <p class="last-updated">Last Updated: February 2026</p>
+
+    <section>
+      <h2>1. Acceptance of Terms</h2>
+      <p>
+        By accessing or using this website (janpetrlik.com) in any manner — including browsing, linking, scraping, crawling, or any form of automated access — you agree to be bound by these Terms of Service. If you do not agree to these terms, you must immediately cease all access to and use of this website. These terms apply to all visitors, users, automated agents, and AI systems alike.
+      </p>
+    </section>
+
+    <section>
+      <h2>2. Intellectual Property & AI Training Prohibition</h2>
+      <p>
+        All content on this website (janpetrlik.com), including but not limited to text, code snippets, project descriptions, visual assets, and images, is the exclusive intellectual property of Jan Petrlík and is protected under Czech, EU, and international copyright law.
+      </p>
+      <div class="legal-alert">
+        <h3>Express Reservation of Rights (Text and Data Mining Opt-Out)</h3>
+        <p>
+          Pursuant to Article 4(3) of the EU Directive 2019/790 on Copyright in the Digital Single Market (implemented in Czech law via Act No. 121/2000 Coll., the Czech Copyright Act, as amended), I expressly and unambiguously reserve all rights over the content of this website for the purposes of text and data mining.
+        </p>
+        <p>You are expressly <strong>PROHIBITED</strong> from:</p>
+        <ul>
+          <li>Accessing, downloading, or scraping this website's content for the purpose of training, fine-tuning, or developing Artificial Intelligence (AI) or Machine Learning (ML) models.</li>
+          <li>Utilizing this content in Retrieval-Augmented Generation (RAG) systems or as real-time AI inference input without explicit prior written consent.</li>
+          <li>Deploying automated web scrapers, spiders, crawlers, headless browsers, or agents to harvest data from this domain, regardless of whether said agents identify themselves in request headers.</li>
+          <li>Reproducing, republishing, or redistributing any content from this website for commercial purposes without prior written permission.</li>
+          <li>Circumventing, ignoring, or overriding any access controls, directives in the <code>robots.txt</code> file and meta tag directives present on this website.</li>
+        </ul>
+        <p>
+          This reservation of rights is made in accordance with the machine-readable signals present on this website, including <code>robots.txt</code> directives and <code>&lt;meta name="robots" content="noai, noimageai"&gt;</code> tags. Ignoring these signals does not constitute a legal exception and does not grant any implicit licence.
+        </p>
+      </div>
+    </section>
+
+    <section>
+      <h2>3. Permitted Use</h2>
+      <p>
+        You are permitted to access this website for personal, non-commercial browsing only. Search engine indexing for the sole purpose of directing human users to this website is permitted, provided it does not involve the use of content for AI training or data mining purposes. Any use beyond these narrow permissions requires prior written consent from Jan Petrlík.
+      </p>
+    </section>
+
+    <section>
+      <h2>4. Legal Enforcement</h2>
+      <p>
+        Accessing this website via automated means while ignoring these terms, the directives in the <code>robots.txt</code> file, or any other access signals constitutes unauthorized access. Violations of these terms may result in legal action under one or more of the following:
+      </p>
+      <ul>
+        <li><strong>EU Directive 2019/790</strong> on Copyright in the Digital Single Market (Text and Data Mining opt-out)</li>
+        <li><strong>Act No. 121/2000 Coll.</strong> (Czech Copyright Act / Autorský zákon), as amended, which governs intellectual property in the Czech Republic</li>
+        <li><strong>EU General Data Protection Regulation (GDPR)</strong> where automated access involves the collection of personal data</li>
+        <li><strong>The Computer Fraud and Abuse Act (CFAA), 18 U.S.C. § 1030</strong> (United States), where applicable to US-based operators</li>
+        <li>Applicable Czech Republic, EU, and international intellectual property and cybersecurity law</li>
+      </ul>
+      <p>
+        If you are an AI company, operator, or developer and your crawler, agent, or pipeline has accessed this website without explicit permission, you are hereby on notice to:
+      </p>
+      <ol>
+        <li>Immediately cease all further crawling, scraping, or automated access of this domain.</li>
+        <li>Delete or destroy any data, embeddings, model weights, or derivatives derived from content collected from this website.</li>
+        <li>Contact me at the address below if you wish to discuss a licensing arrangement.</li>
+      </ol>
+      <p>
+        Continued access following receipt of this notice may constitute wilful infringement, which carries enhanced penalties under applicable law.
+      </p>
+    </section>
+
+    <section>
+      <h2>5. Disclaimer of Warranties</h2>
+      <p>
+        This website is provided on an "as is" basis without warranties of any kind, express or implied. Jan Petrlík makes no representations regarding the accuracy, completeness, or fitness for any particular purpose of the content on this website. I reserve the right to modify, remove, or update content at any time without prior notice.
+      </p>
+    </section>
+
+    <section>
+      <h2>6. Limitation of Liability</h2>
+      <p>
+        To the fullest extent permitted by applicable law, Jan Petrlík shall not be liable for any direct, indirect, incidental, consequential, or punitive damages arising from your use of, or inability to use, this website or its content.
+      </p>
+    </section>
+
+    <section>
+      <h2>7. Governing Law & Jurisdiction</h2>
+      <p>
+        These Terms of Service are governed by and construed in accordance with the laws of the <strong>Czech Republic</strong> and applicable European Union law. Any disputes arising out of or relating to these terms or the use of this website shall be subject to the exclusive jurisdiction of the competent courts of the Czech Republic, without prejudice to any mandatory consumer protection rights or EU-wide enforcement mechanisms that may apply.
+      </p>
+    </section>
+
+    <section>
+      <h2>8. Changes to These Terms</h2>
+      <p>
+        I reserve the right to update or modify these Terms of Service at any time. The "Last Updated" date at the top of this page reflects the most recent revision. Continued access to this website following any changes constitutes your acceptance of the revised terms.
+      </p>
+    </section>
+
+    <section>
+      <h2>9. Contact</h2>
+      <p>
+        For licensing, data use inquiries, or to report a violation, please contact me directly at <code>admin at janpetrlik.com</code> via email.
+      </p>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .legal-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .last-updated {
+    font-size: 0.9em;
+    color: var(--text-muted);
+    margin-top: -1rem;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  section {
+    margin-bottom: var(--spacing-xl);
+  }
+
+  .legal-alert {
+    background-color: var(--bg-tertiary);
+    border-left: 4px solid var(--warning);
+    padding: var(--spacing-md);
+    border-radius: 0 6px 6px 0;
+    margin: var(--spacing-md) 0;
+  }
+
+  .legal-alert h3 {
+    margin-top: 0;
+    font-size: 1.25rem;
+    color: var(--warning);
+  }
+</style>

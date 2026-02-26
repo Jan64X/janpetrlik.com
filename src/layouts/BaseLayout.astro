@@ -16,6 +16,12 @@ const { title, description = "Systems administrator and homelab enthusiast. Buil
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
+    
+    <!-- Prevent the page from being used by Generative AI models -->
+    <meta name="robots" content="noai, noimageai" />
+    <!-- Cloudflare/Industry Standard AI signal -->
+    <meta name="content-signal" content="ai-input=no, ai-train=no" />
+    
     <title>{title}</title>
   </head>
   <body>
@@ -43,7 +49,14 @@ const { title, description = "Systems administrator and homelab enthusiast. Buil
     
     <footer class="footer">
       <div class="footer-container">
-        <p>&copy; {new Date().getFullYear()} Jan Petrlík. Built with love.</p>
+        <p>
+          &copy; {new Date().getFullYear()} Jan Petrlík. Built with love.
+          <br />
+          <span style="font-size: 0.8em; color: var(--text-muted);">
+            By using this website you agree to its <a href="/legal">Terms of Service</a>.
+            Automated access, AI scraping, and data mining are strictly prohibited.
+          </span>
+        </p>
       </div>
     </footer>
   </body>
