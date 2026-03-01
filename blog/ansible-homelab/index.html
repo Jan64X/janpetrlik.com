@@ -1,0 +1,316 @@
+<!DOCTYPE html><html lang="en"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="icon" type="image/png" href="/favicon.png"><meta name="generator" content="Astro v5.17.1"><meta name="description" content="How I automated my 16-VM Proxmox homelab using Ansible, from base image to production services."><!-- Prevent the page from being used by Generative AI models --><meta name="robots" content="noai, noimageai"><!-- Cloudflare/Industry Standard AI signal --><meta name="content-signal" content="ai-input=no, ai-train=no"><title>Building a 11k-Line Ansible Homelab</title><link rel="stylesheet" href="/_astro/_slug_.F6Inz1YM.css">
+<style>.blog-post[data-astro-cid-4dqtj3le]{max-width:800px;margin:0 auto}.post-header[data-astro-cid-4dqtj3le]{margin-bottom:var(--spacing-xl);padding-bottom:var(--spacing-lg);border-bottom:1px solid var(--border)}.post-header[data-astro-cid-4dqtj3le] h1[data-astro-cid-4dqtj3le]{margin-top:0;margin-bottom:var(--spacing-md);font-size:2.5rem}.post-meta[data-astro-cid-4dqtj3le]{display:flex;align-items:center;gap:var(--spacing-md);flex-wrap:wrap}.post-meta[data-astro-cid-4dqtj3le] time[data-astro-cid-4dqtj3le]{color:var(--text-muted);font-family:var(--font-mono);font-size:.9rem}.post-tags[data-astro-cid-4dqtj3le]{display:flex;gap:var(--spacing-xs);flex-wrap:wrap}.tag[data-astro-cid-4dqtj3le]{background-color:var(--bg-tertiary);color:var(--accent);padding:.25rem .75rem;border-radius:12px;font-size:.85rem;font-family:var(--font-mono)}.post-content[data-astro-cid-4dqtj3le]{line-height:1.8}.post-content[data-astro-cid-4dqtj3le] pre{margin:var(--spacing-lg) 0;line-height:1.5}.post-content[data-astro-cid-4dqtj3le] img{max-width:100%;height:auto;width:auto;border-radius:6px;margin:var(--spacing-lg) 0;border:1px solid var(--border);display:block}.post-content[data-astro-cid-4dqtj3le] blockquote{border-left:4px solid var(--accent);padding-left:var(--spacing-md);margin:var(--spacing-lg) 0;color:var(--text-secondary);font-style:italic}.post-content[data-astro-cid-4dqtj3le] table{width:100%;border-collapse:collapse;margin:var(--spacing-lg) 0}.post-content[data-astro-cid-4dqtj3le] th,.post-content[data-astro-cid-4dqtj3le] td{border:1px solid var(--border);padding:var(--spacing-sm);text-align:left}.post-content[data-astro-cid-4dqtj3le] th{background-color:var(--bg-secondary);font-weight:600}.post-footer[data-astro-cid-4dqtj3le]{margin-top:var(--spacing-xl);padding-top:var(--spacing-lg);border-top:1px solid var(--border)}.back-link[data-astro-cid-4dqtj3le]{display:inline-flex;align-items:center;color:var(--accent);font-weight:500}.back-link[data-astro-cid-4dqtj3le]:hover{color:var(--accent-hover)}@media(max-width:768px){.post-header[data-astro-cid-4dqtj3le] h1[data-astro-cid-4dqtj3le]{font-size:2rem}}
+</style></head> <body> <nav class="nav"> <div class="nav-container"> <a href="/" class="nav-logo">~/janpetrlik.com</a> <input type="checkbox" id="nav-toggle" class="nav-toggle"> <label for="nav-toggle" class="nav-toggle-label"> <span></span> <span></span> <span></span> </label> <div class="nav-links"> <a href="/">Home</a> <a href="/about">About</a> <a href="/projects">Projects</a> <a href="/blog">Blog</a> </div> </div> </nav> <main>  <article class="blog-post" data-astro-cid-4dqtj3le> <header class="post-header" data-astro-cid-4dqtj3le> <h1 data-astro-cid-4dqtj3le>Building a 11k-Line Ansible Homelab</h1> <div class="post-meta" data-astro-cid-4dqtj3le> <time datetime="2025-11-10" data-astro-cid-4dqtj3le>November 10, 2025</time> <div class="post-tags" data-astro-cid-4dqtj3le> <span class="tag" data-astro-cid-4dqtj3le>Ansible</span><span class="tag" data-astro-cid-4dqtj3le>Proxmox</span><span class="tag" data-astro-cid-4dqtj3le>Infrastructure</span><span class="tag" data-astro-cid-4dqtj3le>Automation</span> </div> </div> </header> <div class="post-content" data-astro-cid-4dqtj3le>  <h2 id="overview">Overview</h2>
+<p>Managing 16 virtual machines across different services manually is tedious and error-prone. This post walks through how I automated my entire homelab deployment using Ansible, resulting in a 11k-line playbook that can rebuild the entire infrastructure from scratch.</p>
+<h2 id="the-infrastructure">The Infrastructure</h2>
+<p>My homelab runs on a Dell PowerEdge R620 with:</p>
+<ul>
+<li>Dual Intel Xeon E5-2670 v2 (10 cores each, 20 cores/40 threads total)</li>
+<li>256GB DDR3 ECC RAM</li>
+<li>Proxmox VE as the hypervisor</li>
+<li>16 VMs running various services</li>
+<li>Mirrored ZFS pool for VM disks made of two 512GB Samsung 860 EVO SSDs</li>
+</ul>
+<h2 id="why-ansible">Why Ansible?</h2>
+<p>After manually configuring services multiple times and dealing with configuration drift, I needed infrastructure as code. Ansible was chosen because:</p>
+<ul>
+<li><strong>Agentless</strong>: No need to install agents on managed nodes</li>
+<li><strong>YAML-based</strong>: Easy to read and version control</li>
+<li><strong>Idempotent</strong>: Can run playbooks multiple times safely</li>
+<li><strong>Large ecosystem</strong>: Many community roles and modules available</li>
+</ul>
+<img src="/_astro/iac_supremacy.CzheE6iW_dkOI2.webp" alt="Homelab Infrastructure Diagram" loading="lazy" decoding="async" fetchpriority="auto" width="240" height="235">
+<h2 id="project-structure">Project Structure</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto;white-space:pre-wrap;word-wrap:break-word" tabindex="0" data-language="plaintext"><code><span class="line"><span>homelab-ansible</span></span>
+<span class="line"><span>├── ansible.cfg</span></span>
+<span class="line"><span>├── CONTRIBUTING.md</span></span>
+<span class="line"><span>├── credentials</span></span>
+<span class="line"><span>│   ├── hosts</span></span>
+<span class="line"><span>│   │    └── ... # per-host secrets</span></span>
+<span class="line"><span>│   ├── nas_creds.txt</span></span>
+<span class="line"><span>│   └── ssh_keys</span></span>
+<span class="line"><span>│       ├── ansible_admin.key</span></span>
+<span class="line"><span>│       ├── ansible_admin.pub</span></span>
+<span class="line"><span>│       ├── README.md</span></span>
+<span class="line"><span>│       ├── sysadmin_homelab.pub</span></span>
+<span class="line"><span>│       └── sysadmin_vpses.pub</span></span>
+<span class="line"><span>├── group_vars</span></span>
+<span class="line"><span>│   ├── all.yml</span></span>
+<span class="line"><span>│   ├── all.yml.example</span></span>
+<span class="line"><span>│   ├── homelab.yml</span></span>
+<span class="line"><span>│   ├── homelab.yml.example</span></span>
+<span class="line"><span>│   ├── vpses.yml</span></span>
+<span class="line"><span>│   └── vpses.yml.example</span></span>
+<span class="line"><span>├── inventory</span></span>
+<span class="line"><span>│   ├── hosts.yml</span></span>
+<span class="line"><span>│   └── hosts.yml.example</span></span>
+<span class="line"><span>├── LICENSE</span></span>
+<span class="line"><span>├── README.md</span></span>
+<span class="line"><span>├── roles</span></span>
+<span class="line"><span>│   ├── base</span></span>
+<span class="line"><span>│   ├── filescdn</span></span>
+<span class="line"><span>│   └── ...</span></span>
+<span class="line"><span>├── SETUP.md</span></span>
+<span class="line"><span>├── site.yml</span></span>
+<span class="line"><span>├── TODO.md</span></span>
+<span class="line"><span>└── update.yml</span></span></code></pre>
+<h2 id="key-components">Key Components</h2>
+<h3 id="base-configuration">Base Configuration</h3>
+<p>Every server starts with the <code>base</code> role, which handles the foundation:</p>
+<ul>
+<li>Creating system users with proper permissions</li>
+<li>Setting up SSH key-based authentication</li>
+<li>Configuring UFW firewall rules</li>
+<li>Installing security tools like fail2ban</li>
+<li>Setting up automatic security updates</li>
+</ul>
+<h3 id="the-services">The Services</h3>
+<p>My homelab runs a variety of self-hosted services, each automated through Ansible:</p>
+<p><strong>Development &amp; Collaboration:</strong></p>
+<ul>
+<li><strong>Forgejo</strong>: Self-hosted Git repository manager</li>
+<li><strong>SearXNG</strong>: Privacy-respecting metasearch engine aggregating results from multiple sources</li>
+</ul>
+<p><strong>Media &amp; Content:</strong></p>
+<ul>
+<li><strong>Immich</strong>: Modern photo and video management (like Google Photos, but self-hosted)</li>
+<li><strong>Navidrome</strong>: Music server compatible with Subsonic clients</li>
+<li><strong>Files CDN</strong>: Content delivery and file hosting service</li>
+<li><strong>Torrent Downloader</strong>: qBittorrent with Flood web UI for downloads</li>
+</ul>
+<p><strong>Social &amp; Communication:</strong></p>
+<ul>
+<li><strong>Sharkey</strong>: Federated microblogging server (a Misskey fork)</li>
+</ul>
+<p><strong>Infrastructure:</strong></p>
+<ul>
+<li><strong>Nginx Gateway</strong>: Reverse proxy handling SSL termination and routing</li>
+<li><strong>UniFi Controller</strong>: Network management for my UniFi devices</li>
+<li><strong>Prometheus + Grafana</strong>: Monitoring and metrics visualization</li>
+<li><strong>Node Exporter</strong>: System metrics collection on all hosts</li>
+</ul>
+<h3 id="the-smart-part-dynamic-deployment">The Smart Part: Dynamic Deployment</h3>
+<p>Instead of writing separate playbooks for each host, I use a role-based approach. Each host in the inventory has a <code>host_roles</code> variable that lists which services should run on it:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto;white-space:pre-wrap;word-wrap:break-word" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">nginx-gateway</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">  ansible_host</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">192.168.1.10</span></span>
+<span class="line"><span style="color:#85E89D">  host_roles</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    - </span><span style="color:#9ECBFF">base</span></span>
+<span class="line"><span style="color:#E1E4E8">    - </span><span style="color:#9ECBFF">nginx_gateway</span></span>
+<span class="line"><span style="color:#E1E4E8">    - </span><span style="color:#9ECBFF">monitoring-hl</span></span></code></pre>
+<p>The playbook reads this and automatically applies the appropriate roles. Want to move GitLab to a different server? Just change the <code>host_roles</code> assignment and re-run the playbook.</p>
+<h2 id="building-the-automation">Building the Automation</h2>
+<h3 id="starting-simple">Starting Simple</h3>
+<p>I didn’t build this all at once. The first role I wrote was <code>base</code>, which handles common tasks across all servers:</p>
+<ol>
+<li>Create system users (ansible for automation, sysadmin for manual access)</li>
+<li>Deploy SSH keys</li>
+<li>Configure passwordless sudo</li>
+<li>Set up firewall rules</li>
+<li>Install security tools</li>
+</ol>
+<p>Once that worked reliably, I could deploy new VMs knowing they’d be properly secured and accessible.</p>
+<h3 id="the-template-pattern">The Template Pattern</h3>
+<p>Most services follow a similar pattern:</p>
+<ol>
+<li><strong>Install dependencies</strong> (Docker, database, etc.)</li>
+<li><strong>Generate credentials</strong> if they don’t exist</li>
+<li><strong>Deploy configuration files</strong> from Jinja2 templates</li>
+<li><strong>Pull from NAS backup</strong> if restoring, or start fresh</li>
+<li><strong>Start the service</strong> (usually via Docker Compose or systemd)</li>
+<li><strong>Configure firewall rules</strong> for the service ports</li>
+</ol>
+<p>The beauty of Ansible is <strong>idempotency</strong>—running the playbook multiple times produces the same result. It won’t regenerate passwords or recreate containers if they already exist.</p>
+<h3 id="handling-secrets">Handling Secrets</h3>
+<p>Security was a major consideration. The playbook generates unique passwords for each service and stores them in <code>credentials/hosts/&lt;hostname&gt;/</code>. These files are gitignored, so they never end up in version control.</p>
+<p>For NAS access (used for backups), credentials are stored in <code>credentials/nas_creds.txt</code> and loaded at runtime:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto;white-space:pre-wrap;word-wrap:break-word" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">nas_credentials</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;{{ lookup(&#39;file&#39;, playbook_dir + &#39;/credentials/nas_creds.txt&#39;) | from_yaml }}&quot;</span></span></code></pre>
+<p>SSH keys are separated by environment:</p>
+<ul>
+<li><code>ansible_admin.key</code> - Used by Ansible to connect to all hosts</li>
+<li><code>sysadmin_homelab.pub</code> - Personal access to homelab servers</li>
+<li><code>sysadmin_vpses.pub</code> - Personal access to VPS servers</li>
+</ul>
+<h3 id="the-nginx-gateway">The Nginx Gateway</h3>
+<p>One of the most important roles is the Nginx gateway, which handles:</p>
+<ol>
+<li><strong>Reverse proxy routing</strong> - Routes requests to backend services based on domain</li>
+<li><strong>SSL/TLS termination</strong> - Handles HTTPS using Cloudflare Origin CA certificates</li>
+<li><strong>Static website hosting</strong> - Automatically pulls my personal website from GitHub</li>
+</ol>
+<p>The configuration uses Jinja2 templates to generate virtual host configs:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto;white-space:pre-wrap;word-wrap:break-word" tabindex="0" data-language="nginx"><code><span class="line"><span style="color:#F97583">server</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#F97583">    listen </span><span style="color:#79B8FF">443</span><span style="color:#E1E4E8"> ssl http2;</span></span>
+<span class="line"><span style="color:#F97583">    server_name </span><span style="color:#E1E4E8">{{ services.gitlab.domain }};</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#F97583">    ssl_certificate </span><span style="color:#E1E4E8">{{ nginx_ssl_cert_path }};</span></span>
+<span class="line"><span style="color:#F97583">    ssl_certificate_key </span><span style="color:#E1E4E8">{{ nginx_ssl_key_path }};</span></span>
+<span class="line"><span style="color:#E1E4E8">    </span></span>
+<span class="line"><span style="color:#F97583">    location</span><span style="color:#B392F0"> / </span><span style="color:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#F97583">        proxy_pass </span><span style="color:#E1E4E8">{{ services.gitlab.backend_server }};</span></span>
+<span class="line"><span style="color:#F97583">        proxy_set_header </span><span style="color:#E1E4E8">Host $host;</span></span>
+<span class="line"><span style="color:#6A737D">        # ... more proxy settings</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<p>All service endpoints are configured in <code>group_vars/all.yml</code>, making it easy to change backends without touching templates.</p>
+<h3 id="monitoring-everything">Monitoring Everything</h3>
+<p>The observability stack consists of:</p>
+<ul>
+<li><strong>Node Exporter</strong> on every host (collecting CPU, memory, disk metrics)</li>
+<li><strong>Prometheus</strong> scraping metrics from all exporters</li>
+<li><strong>Grafana</strong> for visualization and dashboards</li>
+</ul>
+<p>The monitoring role automatically discovers all hosts and configures Prometheus scrape targets:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto;white-space:pre-wrap;word-wrap:break-word" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#85E89D">scrape_configs</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">  {% </span><span style="color:#9ECBFF">for host in groups</span><span style="color:#E1E4E8">[</span><span style="color:#9ECBFF">&#39;homelab&#39;</span><span style="color:#E1E4E8">] %}</span></span>
+<span class="line"><span style="color:#E1E4E8">  - </span><span style="color:#85E89D">job_name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#39;{{ host }}&#39;</span></span>
+<span class="line"><span style="color:#85E89D">    static_configs</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">      - </span><span style="color:#85E89D">targets</span><span style="color:#E1E4E8">: [</span><span style="color:#9ECBFF">&#39;{{ hostvars[host].ansible_host }}:9100&#39;</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#E1E4E8">  {% </span><span style="color:#9ECBFF">endfor %</span><span style="color:#E1E4E8">}</span></span></code></pre>
+<p>This means adding a new host to the inventory automatically adds it to monitoring — no manual configuration needed!</p>
+<h3 id="backup-and-restore">Backup and Restore</h3>
+<p>Several services integrate with my NAS for backups:</p>
+<p><strong>Forgejo</strong>: Backs up repositories, database, and configuration to NAS weekly. On first deployment, the role checks for existing backups and restores if found (simplified example):</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto;white-space:pre-wrap;word-wrap:break-word" tabindex="0" data-language="yaml"><code><span class="line"><span style="color:#E1E4E8">- </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">Find latest backup on NAS</span></span>
+<span class="line"><span style="color:#85E89D">  ansible.builtin.find</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    paths</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">/mnt/forgejo_temp</span></span>
+<span class="line"><span style="color:#85E89D">    patterns</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#39;forgejo-backup-*.zip&#39;</span></span>
+<span class="line"><span style="color:#85E89D">    age</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">-90d</span><span style="color:#6A737D">  # Only look at backups from last 90 days</span></span>
+<span class="line"><span style="color:#85E89D">  register</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">backup_files</span></span>
+<span class="line"><span style="color:#85E89D">  when</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">is_fresh_install</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">- </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">Set latest backup path</span></span>
+<span class="line"><span style="color:#85E89D">  ansible.builtin.set_fact</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    latest_backup</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;{{ (backup_files.files | sort(attribute=&#39;mtime&#39;, reverse=true) | first).path if backup_files.files | length &gt; 0 else &#39;&#39; }}&quot;</span></span>
+<span class="line"><span style="color:#85E89D">  when</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">is_fresh_install</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">- </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">Deploy docker-compose.yml</span></span>
+<span class="line"><span style="color:#85E89D">  ansible.builtin.template</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    src</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">docker-compose.yml.j2</span></span>
+<span class="line"><span style="color:#85E89D">    dest</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">/opt/forgejo/docker-compose.yml</span></span>
+<span class="line"><span style="color:#85E89D">    mode</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#39;0644&#39;</span></span>
+<span class="line"><span style="color:#85E89D">  become</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">true</span></span>
+<span class="line"><span style="color:#85E89D">  notify</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">Restart Forgejo</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">- </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">Copy backup to temporary location</span></span>
+<span class="line"><span style="color:#85E89D">  ansible.builtin.copy</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    src</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;{{ latest_backup }}&quot;</span></span>
+<span class="line"><span style="color:#85E89D">    dest</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;/tmp/forgejo-restore.zip&quot;</span></span>
+<span class="line"><span style="color:#85E89D">    remote_src</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">true</span></span>
+<span class="line"><span style="color:#85E89D">    mode</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&#39;0644&#39;</span></span>
+<span class="line"><span style="color:#85E89D">  become</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">true</span></span>
+<span class="line"><span style="color:#85E89D">  when</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    - </span><span style="color:#9ECBFF">is_fresh_install</span></span>
+<span class="line"><span style="color:#E1E4E8">    - </span><span style="color:#9ECBFF">latest_backup != &#39;&#39;</span></span>
+<span class="line"><span style="color:#E1E4E8">    - </span><span style="color:#9ECBFF">not (forgejo_force_fresh | default(false))</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">- </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">Extract backup to temporary directory</span></span>
+<span class="line"><span style="color:#85E89D">  ansible.builtin.unarchive</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    src</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;/tmp/forgejo-restore.zip&quot;</span></span>
+<span class="line"><span style="color:#85E89D">    dest</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;/tmp&quot;</span></span>
+<span class="line"><span style="color:#85E89D">    remote_src</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">true</span></span>
+<span class="line"><span style="color:#85E89D">  become</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">true</span></span>
+<span class="line"><span style="color:#85E89D">  when</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    - </span><span style="color:#9ECBFF">is_fresh_install</span></span>
+<span class="line"><span style="color:#E1E4E8">    - </span><span style="color:#9ECBFF">latest_backup != &#39;&#39;</span></span>
+<span class="line"><span style="color:#E1E4E8">    - </span><span style="color:#9ECBFF">not (forgejo_force_fresh | default(false))</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">- </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">Restore Forgejo data directory</span></span>
+<span class="line"><span style="color:#85E89D">  ansible.posix.synchronize</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    src</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;/tmp/data/&quot;</span></span>
+<span class="line"><span style="color:#85E89D">    dest</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;/var/lib/forgejo/data/&quot;</span></span>
+<span class="line"><span style="color:#85E89D">  delegate_to</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;{{ inventory_hostname }}&quot;</span></span>
+<span class="line"><span style="color:#85E89D">  become</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">true</span></span>
+<span class="line"><span style="color:#85E89D">  when</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    - </span><span style="color:#9ECBFF">is_fresh_install</span></span>
+<span class="line"><span style="color:#E1E4E8">    - </span><span style="color:#9ECBFF">latest_backup != &#39;&#39;</span></span>
+<span class="line"><span style="color:#E1E4E8">    - </span><span style="color:#9ECBFF">not (forgejo_force_fresh | default(false))</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">- </span><span style="color:#85E89D">name</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">Start Forgejo with Docker Compose</span></span>
+<span class="line"><span style="color:#85E89D">  community.docker.docker_compose_v2</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#85E89D">    project_src</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">/opt/forgejo</span></span>
+<span class="line"><span style="color:#85E89D">    state</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">present</span></span>
+<span class="line"><span style="color:#85E89D">    pull</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">&quot;always&quot;</span></span>
+<span class="line"><span style="color:#85E89D">  become</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">true</span></span></code></pre>
+<p><strong>Immich and Sharkey</strong> follow similar patterns, with flags like <code>immich_force_restore: true</code> to control whether to restore from backup or start fresh.</p>
+<h2 id="real-world-benefits">Real-World Benefits</h2>
+<h3 id="disaster-recovery">Disaster Recovery</h3>
+<p>The biggest win came when a VM’s virtual disk corrupted. In the past, this would’ve meant hours of manual reconfiguration. Instead:</p>
+<ol>
+<li>Deployed fresh Debian 12 VM</li>
+<li>Created ansible user with passwordless sudo</li>
+<li>Added host to inventory</li>
+<li>Ran: <code>ansible-playbook site.yml --limit failed-host</code></li>
+</ol>
+<p>15 minutes later, the service was back online with all data restored from NAS.</p>
+<h3 id="consistency">Consistency</h3>
+<p>Before Ansible, each server was slightly different. Different SSH configurations, different firewall rules, different package versions. Now, every server gets the exact same base configuration, making troubleshooting much easier.</p>
+<h3 id="documentation-as-code">Documentation as Code</h3>
+<p>The playbook <strong>is</strong> the documentation. Want to know how GitLab is configured? Read <code>roles/gitlab/tasks/main.yml</code>. Want to know which ports are open? Check the firewall tasks. No more outdated wiki pages.</p>
+<h3 id="easy-updates">Easy Updates</h3>
+<p>The <code>update.yml</code> playbook updates all Debian packages across every host:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8;overflow-x:auto;white-space:pre-wrap;word-wrap:break-word" tabindex="0" data-language="bash"><code><span class="line"><span style="color:#B392F0">ansible-playbook</span><span style="color:#9ECBFF"> update.yml</span></span></code></pre>
+<p>I run this monthly, and it updates 16 VMs in parallel. What used to take an hour now takes 5 minutes.</p>
+<h2 id="lessons-learned">Lessons Learned</h2>
+<h3 id="start-small">Start Small</h3>
+<p>Don’t try to automate everything at once. I started with just the base role and one service (Nginx). Once that was solid, I added more services incrementally.</p>
+<h3 id="idempotency-matters">Idempotency Matters</h3>
+<p>Always make your playbooks idempotent. Use modules like <code>stat</code> to check if something exists before creating it. Use <code>creates</code> parameter on shell tasks. This makes re-running playbooks safe.</p>
+<h3 id="variables-are-your-friend">Variables Are Your Friend</h3>
+<p>I spent time organizing variables into a hierarchy:</p>
+<ul>
+<li><code>group_vars/all.yml</code> - Global settings</li>
+<li><code>group_vars/homelab.yml</code> - Homelab-specific settings</li>
+<li><code>group_vars/vpses.yml</code> - VPS-specific settings</li>
+<li>Inventory host variables - Host-specific overrides</li>
+</ul>
+<p>This made it easy to manage differences between environments without duplicating code.</p>
+<h3 id="test-test-test">Test, Test, Test</h3>
+<p>I maintain a “test” stack of VMs that I break regularly to verify the playbook can rebuild them. This catches issues before they affect production services.</p>
+<h3 id="dont-fight-the-tools">Don’t Fight the Tools</h3>
+<p>Early on, I tried to make Ansible do things it wasn’t designed for (complex conditional logic, loops within loops). When I found myself writing 50+ lines of Jinja2, I stepped back and simplified. Sometimes a simple shell script called by Ansible is the right answer.</p>
+<h2 id="the-results">The Results</h2>
+<p><strong>Before Ansible:</strong></p>
+<ul>
+<li>Manual configuration: ~2 hours per server</li>
+<li>Configuration drift across hosts</li>
+<li>No disaster recovery plan</li>
+<li>Updates required SSHing into each server</li>
+<li>Incomplete documentation</li>
+</ul>
+<p><strong>After Ansible:</strong></p>
+<ul>
+<li>New server deployment: 15 minutes (mostly waiting for packages)</li>
+<li>Consistent configuration across all hosts</li>
+<li>One-command disaster recovery</li>
+<li>Parallel updates in 5 minutes</li>
+<li>Self-documenting infrastructure</li>
+</ul>
+<h2 id="future-improvements">Future Improvements</h2>
+<p>There’s still room for enhancement:</p>
+<ol>
+<li><strong>Automated testing</strong> - Set up CI/CD to test playbook changes against test VMs (Not sure If I really want do this one, it’s a pain in the butt)</li>
+<li><strong>Ansible Vault</strong> - Encrypt sensitive variables instead of relying on gitignore</li>
+<li><strong>Service health checks</strong> - Add post-deployment verification</li>
+<li><strong>Better backup rotation</strong> - Improve automated backup cleanup and retention policies</li>
+<li><strong>Secrets management</strong> - Consider HashiCorp Vault or similar for credential management</li>
+</ol>
+<h2 id="conclusion">Conclusion</h2>
+<p>Building this 11k-line Ansible playbook was a journey that took months of incremental improvements. The initial time investment was significant, but the ongoing benefits are enormous.</p>
+<p>If you’re managing more than a few servers manually, infrastructure as code isn’t just nice to have — it’s essential. Ansible’s agentless architecture and readable YAML syntax make it an excellent choice for homelab automation.</p>
+<p>The best part? Everything is version controlled. I can see exactly how my infrastructure evolved over time, roll back changes if needed, and confidently make updates knowing I can rebuild from scratch if something goes wrong.</p>
+<p><strong>Key Takeaways:</strong></p>
+<ul>
+<li>Start with base configuration and add services incrementally</li>
+<li>Make everything idempotent so playbooks are safe to re-run</li>
+<li>Use variables to avoid hardcoding values</li>
+<li>Test disaster recovery procedures regularly</li>
+<li>Document through code, not separate wikis</li>
+</ul>
+<p>The code is available on my GitHub for those interested in diving deeper. Happy automating! 🚀</p>
+<hr/>
+<p><em>Have questions about Ansible or homelab automation? Feel free to reach out!</em></p>  </div> <footer class="post-footer" data-astro-cid-4dqtj3le> <a href="/blog" class="back-link" data-astro-cid-4dqtj3le>← Back to blog</a> </footer> </article>  </main> <footer class="footer"> <div class="footer-container"> <p>
+&copy; 2026 Jan Petrlík. Built with love.
+<br> <span style="font-size: 0.8em; color: var(--text-muted);">
+By using this website you agree to its <a href="/legal">Terms of Service</a>.
+            Automated access, AI scraping, and data mining are strictly prohibited.
+</span> </p> </div> </footer> </body></html> 

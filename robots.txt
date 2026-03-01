@@ -1,0 +1,258 @@
+# robots.txt for janpetrlik.com
+# © 2026 Jan Petrlík. All rights reserved.
+#
+# LEGAL NOTICE — READ BEFORE CRAWLING
+#
+# This website and all its contents, including but not limited to text, code,
+# project descriptions, and personal information, are the exclusive intellectual
+# property of Jan Petrlík (janpetrlik.com).
+#
+# Accessing this website for the purposes of AI training, fine-tuning, data
+# collection, retrieval-augmented generation (RAG), or any other automated
+# AI/ML pipeline is expressly PROHIBITED without prior written consent.
+#
+# Any scraping, crawling, or automated harvesting of content from this website
+# by AI systems, bots, or automated agents — regardless of whether they identify
+# themselves — constitutes a violation of my rights under:
+#
+#   • Article 4, EU Directive 2019/790 on Copyright in the Digital Single Market
+#     (Text and Data Mining opt-out — this is an express reservation of rights)
+#   • The Computer Fraud and Abuse Act (CFAA), 18 U.S.C. § 1030 (US)
+#   • Applicable Czech Republic and EU intellectual property law
+#
+# Violation of these terms will result in legal action. If you are an AI company
+# or operator and your crawler has accessed this website without permission, you
+# are hereby on notice to delete any collected data and cease further crawling.
+#
+# For licensing or data use inquiries, contact me at <admin at janpetrlik.com> via email.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Content Signals (Cloudflare / industry standard):
+#
+#   search:   building a search index and returning hyperlinks/short excerpts.
+#             Does NOT include AI-generated summaries.
+#   ai-input: real-time use of content in AI/ML inference, RAG, grounding, etc.
+#   ai-train: training or fine-tuning AI models.
+#
+# Express reservation of rights under EU Directive 2019/790 Art. 4:
+#   ai-input=no, ai-train=no
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DEFAULT: Allow regular search crawlers, block AI training & input
+# ─────────────────────────────────────────────────────────────────────────────
+
+User-agent: *
+Content-Signal: search=yes,ai-input=no,ai-train=no
+Allow: /
+
+# ─────────────────────────────────────────────────────────────────────────────
+# BEGIN AI CRAWLER BLOCK — Updated February 2026
+# ─────────────────────────────────────────────────────────────────────────────
+
+# --- Anthropic ---
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: Claude-SearchBot
+Disallow: /
+
+User-agent: Claude-User
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+# --- OpenAI ---
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
+
+User-agent: ChatGPT-Agent
+Disallow: /
+
+# --- Google ---
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: GoogleOther
+Disallow: /
+
+User-agent: GoogleOther-Image
+Disallow: /
+
+User-agent: GoogleOther-Video
+Disallow: /
+
+# --- Apple ---
+User-agent: Applebot
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+
+# --- Meta / Facebook ---
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: meta-externalfetcher
+Disallow: /
+
+User-agent: Meta-ExternalFetcher
+Disallow: /
+
+User-agent: meta-webindexer
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+# --- Amazon ---
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: bedrockbot
+Disallow: /
+
+# --- Microsoft ---
+User-agent: bingbot
+Disallow: /
+
+User-agent: AzureAI-SearchBot
+Disallow: /
+
+# --- ByteDance / TikTok ---
+User-agent: Bytespider
+Disallow: /
+
+# --- Common Crawl ---
+User-agent: CCBot
+Disallow: /
+
+# --- Perplexity ---
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Perplexity-User
+Disallow: /
+
+# --- Mistral ---
+User-agent: MistralAI-User
+Disallow: /
+
+# --- DeepSeek ---
+User-agent: DeepSeekBot
+Disallow: /
+
+# --- Cohere ---
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: cohere-training-data-crawler
+Disallow: /
+
+# --- DuckDuckGo ---
+User-agent: DuckAssistBot
+Disallow: /
+
+# --- Diffbot ---
+User-agent: Diffbot
+Disallow: /
+
+# --- Brave ---
+User-agent: Bravebot
+Disallow: /
+
+# --- Cloudflare ---
+User-agent: Cloudflare-AutoRAG
+Disallow: /
+
+# --- Omgili / Webzio ---
+User-agent: omgili
+Disallow: /
+
+User-agent: omgilibot
+Disallow: /
+
+User-agent: webzio-extended
+Disallow: /
+
+# --- Hugging Face / LAION ---
+User-agent: img2dataset
+Disallow: /
+
+User-agent: laion-huggingface-processor
+Disallow: /
+
+User-agent: LAIONDownloader
+Disallow: /
+
+# --- Misc / Other AI crawlers ---
+User-agent: Brightbot 1.0
+Disallow: /
+
+User-agent: ChatGLM-Spider
+Disallow: /
+
+User-agent: CloudVertexBot
+Disallow: /
+
+User-agent: Crawl4AI
+Disallow: /
+
+User-agent: Devin
+Disallow: /
+
+User-agent: FirecrawlAgent
+Disallow: /
+
+User-agent: iaskspider
+Disallow: /
+
+User-agent: ImagesiftBot
+Disallow: /
+
+User-agent: KlaviyoAIBot
+Disallow: /
+
+User-agent: LinerBot
+Disallow: /
+
+User-agent: LinkupBot
+Disallow: /
+
+User-agent: Manus-User
+Disallow: /
+
+User-agent: MyCentralAIScraperBot
+Disallow: /
+
+User-agent: NovaAct
+Disallow: /
+
+User-agent: NotebookLM
+Disallow: /
+
+User-agent: SemrushBot-AI
+Disallow: /
+
+User-agent: Scrapy
+Disallow: /
+
+User-agent: YouBot
+Disallow: /
+
+# ─────────────────────────────────────────────────────────────────────────────
+# END AI CRAWLER BLOCK
+# ─────────────────────────────────────────────────────────────────────────────
