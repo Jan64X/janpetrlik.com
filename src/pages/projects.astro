@@ -17,9 +17,16 @@ import ProjectCard from '../components/ProjectCard.astro';
     <div class="projects-grid">
       <ProjectCard
         title="Homelab Ansible Automation"
-        description="11k-line Ansible playbook deploying 16 VMs on Proxmox. Everything from TrueNAS to GitLab to monitoring, completely automated from bare metal."
+        description="11k-line Ansible playbook deploying VMs on Proxmox. Everything from TrueNAS to Immich to monitoring, completely automated from bare metal."
         tags={['Ansible', 'Proxmox', 'Infrastructure as Code', 'Linux', 'Docker Compose']}
         githubUrl="https://github.com/jan64x/homelab-ansible"
+      />
+      
+      <ProjectCard
+        title="Oracle Ampere VPS"
+        description="Public infrastructure hosting this website and other public services. Fully isolated from the private homelab for security."
+        tags={['Oracle Cloud', 'VPS', 'Linux', 'Nginx', 'Docker']}
+        blogUrl="/blog/host-everything-to-host-smart"
       />
       
       <ProjectCard
@@ -30,7 +37,7 @@ import ProjectCard from '../components/ProjectCard.astro';
       
       <ProjectCard
         title="School Media Team Infrastructure"
-        description="Co-administering production website and CMS. Real users, real uptime requirements."
+        description="Co-administering production website and server infrastructure. Real users, real uptime requirements."
         tags={['System Administration', 'Production']}
         externalUrl="https://educanetplus.cz/"
       />
@@ -97,13 +104,13 @@ import ProjectCard from '../components/ProjectCard.astro';
 
       <ProjectCard
         title="Pine64 PineTime"
-        description="Developing applets in C++ for open-source smartwatch."
+        description="Trying out developing applets in C++ for open-source smartwatch."
         tags={['C++', 'Embedded', 'Open Source', 'Pine64']}
       />
       
       <ProjectCard
         title="Self-Hosted Services"
-        description="Forgejo (CI/CD), Immich (photos), Navidrome (music), Searxng (search), TrueNAS (storage). All self-hosted, no cloud dependencies."
+        description="Forgejo (CI/CD), Immich (photos), Navidrome (music), TrueNAS (storage). All self-hosted, no cloud dependencies."
         tags={['Self-Hosting', 'Docker', 'Linux']}
       />
     </div>
@@ -114,13 +121,13 @@ import ProjectCard from '../components/ProjectCard.astro';
     <div class="projects-grid">
       <ProjectCard
         title="Dell R620 Homelab"
-        description="Dual Xeon E5-2670 v2 (20 cores/40 threads), 256GB RAM. Running Proxmox with 16 production VMs."
+        description="Dual Xeon E5-2670 v2 (20 cores/40 threads), 256GB RAM. Running Proxmox with a few VMs for my services."
         tags={['Proxmox', 'Virtualization', 'Dell R620']}
       />
       
       <ProjectCard
         title="3D Printing"
-        description="Prusa MK3S+ for functional parts, custom enclosures, and hardware modifications."
+        description="Prusa MK3S+ for functional parts, custom enclosures, and hardware modifications. Modified with E3D Revo hotend to stop leaks."
         tags={['3D Printing', 'Prusa MK3S+', 'Hardware']}
       />
     </div>

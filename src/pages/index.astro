@@ -14,7 +14,7 @@ import ProjectCard from '../components/ProjectCard.astro';
     </p>
     <div class="hero-links">
       <a href="/about" class="btn btn-primary">About Me</a>
-      <a href="mailto:jan64x@janpetrlik.com" class="btn btn-secondary">
+      <a href="mailto:admin@janpetrlik.com" class="btn btn-secondary">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
           <path d="M1.75 2h12.5c.966 0 1.75.784 1.75 1.75v8.5A1.75 1.75 0 0114.25 14H1.75A1.75 1.75 0 010 12.25v-8.5C0 2.784.784 2 1.75 2zM1.5 12.251c0 .138.112.25.25.25h12.5a.25.25 0 00.25-.25V5.809L8.38 9.397a.75.75 0 01-.76 0L1.5 5.809v6.442zm13-8.181v-.32a.25.25 0 00-.25-.25H1.75a.25.25 0 00-.25.25v.32L8 7.88l6.5-3.81z"></path>
         </svg>
@@ -41,13 +41,13 @@ import ProjectCard from '../components/ProjectCard.astro';
       <div class="highlight-card">
         <div class="highlight-icon">🖥️</div>
         <h3>Infrastructure Automation</h3>
-        <p>Built an 11k-line Ansible playbook that deploys my entire homelab. 16 VMs on Proxmox running everything from GitLab to self-hosted photo management.</p>
+        <p>Built an 11k-line Ansible playbook that deploys my entire homelab. Debian VMs on Proxmox running everything from Forgejo to self-hosted photo management.</p>
       </div>
       
       <div class="highlight-card">
         <div class="highlight-icon">🔌</div>
         <h3>Network Engineering</h3>
-        <p>Routing, firewall, VLAN segmentation, and IPv6 deployment. Managing an IPv6 /48 prefix (using HE TunnelBroker) because I wanted to play around with IPv6.</p>
+        <p>Routing, firewall, VLAN segmentation, and IPv6 deployment.</p>
       </div>
       
       <div class="highlight-card">
@@ -63,14 +63,14 @@ import ProjectCard from '../components/ProjectCard.astro';
     <div class="projects-grid">
       <ProjectCard
         title="Homelab Ansible Automation"
-        description="Complete infrastructure-as-code for a 16-VM Proxmox homelab. TrueNAS, Forgejo, NGINX, Immich, monitoring stack, and everything in between."
-        tags={['Ansible', 'Proxmox', 'Linux', 'Docker', 'Debian']}
+        description="Complete infrastructure-as-code for a Debian VMs on Proxmox homelab. TrueNAS, Forgejo, NGINX, Immich, monitoring stack, and everything in between."
+        tags={['Ansible', 'Proxmox', 'Linux', 'Containers', 'Debian']}
         githubUrl="https://github.com/jan64x/homelab-ansible"
       />
       
       <ProjectCard
         title="Xiaomi Camera Hacking"
-        description="Firmware modification via UART to add local SSH and RTSP. Because privacy matters and cloud dependencies don't."
+        description="Firmware modification via UART to add local SSH and RTSP. Because privacy matters and cloud dependencies don't. (you can also check out the webserver I ran on it below)"
         tags={['Reverse Engineering', 'Embedded', 'UART', 'IoT']}
         githubUrl="https://github.com/Jan64X/micam-ssc323-websrv"
       />
@@ -93,6 +93,7 @@ import ProjectCard from '../components/ProjectCard.astro';
       <div class="tech-column">
         <h3>Infrastructure</h3>
         <ul>
+          <li>Oracle Cloud Ampere A1 VPS</li>
           <li>Proxmox (Dell R620)</li>
           <li>Ansible automation</li>
           <li>Docker containers</li>
@@ -110,7 +111,6 @@ import ProjectCard from '../components/ProjectCard.astro';
           <li>Cisco IOS</li>
           <li>OPNsense/pfSense</li>
           <li>OpenWrt</li>
-          <li>Ubiquiti UnifiOS</li>
           <li>IPv6 deployment</li>
           <li>VLANs & firewall</li>
           <li>GNS3 simulation</li>
@@ -120,8 +120,9 @@ import ProjectCard from '../components/ProjectCard.astro';
       <div class="tech-column">
         <h3>Development</h3>
         <ul>
-          <li>Python & Bash</li>
-          <li>Rust (learning)</li>
+          <li>Ansible (intermediate-advanced)</li>
+          <li>Python (novice) & Bash (intermediate)</li>
+          <li>Rust (basics)</li>
           <li>C / C++ (learning, embedded)</li>
           <li>Git (GitHub, GitLab, Forgejo)</li>
           <li>Web (JS/HTML/CSS, Astro, NodeJS)</li>
